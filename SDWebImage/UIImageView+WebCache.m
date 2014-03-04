@@ -14,32 +14,32 @@ static char operationArrayKey;
 
 @implementation UIImageView (WebCache)
 
-- (void)setImageWithURL:(NSURL *)url {
-    [self setImageWithURL:url placeholderImage:nil options:0 progress:nil completed:nil];
+- (void)SDsetImageWithURL:(NSURL *)url {
+    [self SDsetImageWithURL:url placeholderImage:nil options:0 progress:nil completed:nil];
 }
 
-- (void)setImageWithURL:(NSURL *)url placeholderImage:(UIImage *)placeholder {
-    [self setImageWithURL:url placeholderImage:placeholder options:0 progress:nil completed:nil];
+- (void)SDsetImageWithURL:(NSURL *)url placeholderImage:(UIImage *)placeholder {
+    [self SDsetImageWithURL:url placeholderImage:placeholder options:0 progress:nil completed:nil];
 }
 
-- (void)setImageWithURL:(NSURL *)url placeholderImage:(UIImage *)placeholder options:(SDWebImageOptions)options {
-    [self setImageWithURL:url placeholderImage:placeholder options:options progress:nil completed:nil];
+- (void)SDsetImageWithURL:(NSURL *)url placeholderImage:(UIImage *)placeholder options:(SDWebImageOptions)options {
+    [self SDsetImageWithURL:url placeholderImage:placeholder options:options progress:nil completed:nil];
 }
 
-- (void)setImageWithURL:(NSURL *)url completed:(SDWebImageCompletedBlock)completedBlock {
-    [self setImageWithURL:url placeholderImage:nil options:0 progress:nil completed:completedBlock];
+- (void)SDsetImageWithURL:(NSURL *)url completed:(SDWebImageCompletedBlock)completedBlock {
+    [self SDsetImageWithURL:url placeholderImage:nil options:0 progress:nil completed:completedBlock];
 }
 
-- (void)setImageWithURL:(NSURL *)url placeholderImage:(UIImage *)placeholder completed:(SDWebImageCompletedBlock)completedBlock {
-    [self setImageWithURL:url placeholderImage:placeholder options:0 progress:nil completed:completedBlock];
+- (void)SDsetImageWithURL:(NSURL *)url placeholderImage:(UIImage *)placeholder completed:(SDWebImageCompletedBlock)completedBlock {
+    [self SDsetImageWithURL:url placeholderImage:placeholder options:0 progress:nil completed:completedBlock];
 }
 
-- (void)setImageWithURL:(NSURL *)url placeholderImage:(UIImage *)placeholder options:(SDWebImageOptions)options completed:(SDWebImageCompletedBlock)completedBlock {
-    [self setImageWithURL:url placeholderImage:placeholder options:options progress:nil completed:completedBlock];
+- (void)SDsetImageWithURL:(NSURL *)url placeholderImage:(UIImage *)placeholder options:(SDWebImageOptions)options completed:(SDWebImageCompletedBlock)completedBlock {
+    [self SDsetImageWithURL:url placeholderImage:placeholder options:options progress:nil completed:completedBlock];
 }
 
-- (void)setImageWithURL:(NSURL *)url placeholderImage:(UIImage *)placeholder options:(SDWebImageOptions)options progress:(SDWebImageDownloaderProgressBlock)progressBlock completed:(SDWebImageCompletedBlock)completedBlock {
-    [self cancelCurrentImageLoad];
+- (void)SDsetImageWithURL:(NSURL *)url placeholderImage:(UIImage *)placeholder options:(SDWebImageOptions)options progress:(SDWebImageDownloaderProgressBlock)progressBlock completed:(SDWebImageCompletedBlock)completedBlock {
+    [self SDcancelCurrentImageLoad];
 
     self.image = placeholder;
 
@@ -62,8 +62,8 @@ static char operationArrayKey;
     }
 }
 
-- (void)setAnimationImagesWithURLs:(NSArray *)arrayOfURLs {
-    [self cancelCurrentArrayLoad];
+- (void)SDsetAnimationImagesWithURLs:(NSArray *)arrayOfURLs {
+    [self SDcancelCurrentArrayLoad];
     __weak UIImageView *wself = self;
 
     NSMutableArray *operationsArray = [[NSMutableArray alloc] init];
@@ -93,7 +93,7 @@ static char operationArrayKey;
     objc_setAssociatedObject(self, &operationArrayKey, [NSArray arrayWithArray:operationsArray], OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 }
 
-- (void)cancelCurrentImageLoad {
+- (void)SDcancelCurrentImageLoad {
     // Cancel in progress downloader from queue
     id <SDWebImageOperation> operation = objc_getAssociatedObject(self, &operationKey);
     if (operation) {
@@ -102,7 +102,7 @@ static char operationArrayKey;
     }
 }
 
-- (void)cancelCurrentArrayLoad {
+- (void)SDcancelCurrentArrayLoad {
     // Cancel in progress downloader from queue
     NSArray *operations = objc_getAssociatedObject(self, &operationArrayKey);
     for (id <SDWebImageOperation> operation in operations) {
