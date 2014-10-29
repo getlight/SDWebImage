@@ -359,6 +359,14 @@ BOOL ImageDataHasPNGPreffix(NSData *data) {
     return self.memCache.totalCostLimit;
 }
 
+- (void)setMaxMemoryItems:(NSUInteger)maxMemoryItems {
+    self.memCache.countLimit = maxMemoryItems;
+}
+
+- (NSUInteger)maxMemoryItems {
+    return self.memCache.countLimit;
+}
+
 - (void)clearMemory {
     [self.memCache removeAllObjects];
 }
