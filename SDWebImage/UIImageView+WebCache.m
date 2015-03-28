@@ -15,35 +15,79 @@ static char imageURLKey;
 @implementation UIImageView (WebCache)
 
 - (void)sd_setImageWithURL:(NSURL *)url {
-    [self sd_setImageWithURL:url placeholderImage:nil options:0 progress:nil completed:nil];
+    [self sd_setImageWithURL:url placeholderURL:nil placeholderImage:nil options:0 progress:nil placeholderCompleted:nil completed:nil];
 }
 
 - (void)sd_setImageWithURL:(NSURL *)url placeholderImage:(UIImage *)placeholder {
-    [self sd_setImageWithURL:url placeholderImage:placeholder options:0 progress:nil completed:nil];
+    [self sd_setImageWithURL:url placeholderURL:nil placeholderImage:placeholder options:0 progress:nil placeholderCompleted:nil completed:nil];
+}
+
+- (void)sd_setImageWithURL:(NSURL *)url placeholderURL:(NSURL *)placeholderURL {
+    [self sd_setImageWithURL:url placeholderURL:placeholderURL placeholderImage:nil options:0 progress:nil placeholderCompleted:nil completed:nil];
 }
 
 - (void)sd_setImageWithURL:(NSURL *)url placeholderImage:(UIImage *)placeholder options:(SDWebImageOptions)options {
-    [self sd_setImageWithURL:url placeholderImage:placeholder options:options progress:nil completed:nil];
+    [self sd_setImageWithURL:url placeholderURL:nil placeholderImage:placeholder options:options progress:nil placeholderCompleted:nil completed:nil];
+}
+
+- (void)sd_setImageWithURL:(NSURL *)url placeholderURL:(NSURL *)placeholderURL options:(SDWebImageOptions)options {
+    [self sd_setImageWithURL:url placeholderURL:placeholderURL placeholderImage:nil options:options progress:nil placeholderCompleted:nil completed:nil];
 }
 
 - (void)sd_setImageWithURL:(NSURL *)url completed:(SDWebImageCompletionBlock)completedBlock {
-    [self sd_setImageWithURL:url placeholderImage:nil options:0 progress:nil completed:completedBlock];
+    [self sd_setImageWithURL:url placeholderURL:nil placeholderImage:nil options:0 progress:nil placeholderCompleted:nil completed:completedBlock];
 }
 
 - (void)sd_setImageWithURL:(NSURL *)url placeholderImage:(UIImage *)placeholder completed:(SDWebImageCompletionBlock)completedBlock {
-    [self sd_setImageWithURL:url placeholderImage:placeholder options:0 progress:nil completed:completedBlock];
+    [self sd_setImageWithURL:url placeholderURL:nil placeholderImage:placeholder options:0 progress:nil placeholderCompleted:nil completed:completedBlock];
+}
+
+- (void)sd_setImageWithURL:(NSURL *)url placeholderURL:(NSURL *)placeholderURL placeholderCompleted:(SDWebImageCompletionBlock)placeholderCompletedBlock completed:(SDWebImageCompletionBlock)completedBlock {
+    [self sd_setImageWithURL:url placeholderURL:placeholderURL placeholderImage:nil options:0 progress:nil placeholderCompleted:placeholderCompletedBlock completed:completedBlock];
 }
 
 - (void)sd_setImageWithURL:(NSURL *)url placeholderImage:(UIImage *)placeholder options:(SDWebImageOptions)options completed:(SDWebImageCompletionBlock)completedBlock {
-    [self sd_setImageWithURL:url placeholderImage:placeholder options:options progress:nil completed:completedBlock];
+    [self sd_setImageWithURL:url placeholderURL:nil placeholderImage:placeholder options:options progress:nil placeholderCompleted:nil completed:completedBlock];
+}
+
+- (void)sd_setImageWithURL:(NSURL *)url placeholderURL:(NSURL *)placeholderURL options:(SDWebImageOptions)options placeholderCompleted:(SDWebImageCompletionBlock)placeholderCompletedBlock completed:(SDWebImageCompletionBlock)completedBlock {
+    [self sd_setImageWithURL:url placeholderURL:placeholderURL placeholderImage:nil options:0 progress:nil placeholderCompleted:placeholderCompletedBlock completed:completedBlock];
 }
 
 - (void)sd_setImageWithURL:(NSURL *)url placeholderImage:(UIImage *)placeholder options:(SDWebImageOptions)options progress:(SDWebImageDownloaderProgressBlock)progressBlock completed:(SDWebImageCompletionBlock)completedBlock {
+    [self sd_setImageWithURL:url placeholderURL:nil placeholderImage:placeholder options:options progress:progressBlock placeholderCompleted:nil completed:completedBlock];
+}
+
+- (void)sd_setImageWithURL:(NSURL *)url placeholderURL:(NSURL *)placeholderURL options:(SDWebImageOptions)options progress:(SDWebImageDownloaderProgressBlock)progressBlock placeholderCompleted:(SDWebImageCompletionBlock)placeholderCompletedBlock completed:(SDWebImageCompletionBlock)completedBlock {
+    [self sd_setImageWithURL:url placeholderURL:placeholderURL placeholderImage:nil options:options progress:progressBlock placeholderCompleted:placeholderCompletedBlock completed:completedBlock];
+}
+
+- (void)sd_setImageWithURL:(NSURL *)url placeholderURL:(NSURL *)placeholderURL placeholderImage:(UIImage *)placeholder options:(SDWebImageOptions)options progress:(SDWebImageDownloaderProgressBlock)progressBlock placeholderCompleted:(SDWebImageCompletionBlock)placeholderCompletedBlock completed:(SDWebImageCompletionBlock)completedBlock {
     [self sd_cancelCurrentImageLoad];
     objc_setAssociatedObject(self, &imageURLKey, url, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 
     if (!(options & SDWebImageDelayPlaceholder)) {
         self.image = placeholder;
+    }
+    
+    if (placeholderURL) {
+        __weak UIImageView *wself = self;
+        id <SDWebImageOperation> operation = [SDWebImageManager.sharedManager downloadImageWithURL:placeholderURL options:options progress:nil completed:^(UIImage *image, NSError *error, SDImageCacheType cacheType, BOOL finished, NSURL *imageURL) {
+            if (!wself) return;
+            dispatch_main_sync_safe(^{
+                if (!wself) return;
+                if (image) {
+                    if (!wself.image || wself.image == placeholder) {
+                        wself.image = image;
+                        [wself setNeedsLayout];
+                    }
+                }
+                if (placeholderCompletedBlock && finished) {
+                    placeholderCompletedBlock(image, error, cacheType, placeholderURL);
+                }
+            });
+        }];
+        [self sd_setImageLoadOperation:operation forKey:@"UIImageViewImagePlaceholderLoad"];
     }
     
     if (url) {
@@ -55,6 +99,7 @@ static char imageURLKey;
                 if (image) {
                     wself.image = image;
                     [wself setNeedsLayout];
+                    [wself sd_cancelImageLoadOperationWithKey:@"UIImageViewImagePlaceholderLoad"];
                 } else {
                     if ((options & SDWebImageDelayPlaceholder)) {
                         wself.image = placeholder;
@@ -121,6 +166,7 @@ static char imageURLKey;
 
 - (void)sd_cancelCurrentImageLoad {
     [self sd_cancelImageLoadOperationWithKey:@"UIImageViewImageLoad"];
+    [self sd_cancelImageLoadOperationWithKey:@"UIImageViewImagePlaceholderLoad"];
 }
 
 - (void)sd_cancelCurrentAnimationImagesLoad {
