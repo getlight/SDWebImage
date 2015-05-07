@@ -77,6 +77,9 @@ BOOL ImageDataHasPNGPreffix(NSData *data) {
 
         dispatch_sync(_ioQueue, ^{
             _fileManager = [NSFileManager new];
+            if (![_fileManager fileExistsAtPath:_diskCachePath]) {
+                [_fileManager createDirectoryAtPath:_diskCachePath withIntermediateDirectories:YES attributes:nil error:NULL];
+            }
         });
 
 #if TARGET_OS_IPHONE
