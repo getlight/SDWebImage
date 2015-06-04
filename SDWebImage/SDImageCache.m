@@ -202,6 +202,28 @@ BOOL ImageDataHasPNGPreffix(NSData *data) {
     [self storeImage:image recalculateFromImage:YES imageData:nil forKey:key toDisk:toDisk];
 }
 
+- (void)storeData:(NSData *)data toDiskWithKey:(NSString *)key fileExtension:(NSString *)fileExtension done:(SDImageCacheStoreCompletedBlock)doneBlock {
+    if (!data || !key) {
+        return;
+    }
+    dispatch_async(self.ioQueue, ^{
+        if (![_fileManager fileExistsAtPath:_diskCachePath]) {
+            [_fileManager createDirectoryAtPath:_diskCachePath withIntermediateDirectories:YES attributes:nil error:NULL];
+        }
+        
+        NSString *filePath = [self defaultCachePathForKey:key];
+        if (filePath && fileExtension) {
+            filePath = [NSString stringWithFormat:@"%@.%@", filePath, fileExtension];
+        }
+        [_fileManager createFileAtPath:filePath contents:data attributes:nil];
+        if (doneBlock) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                doneBlock(filePath);
+            });
+        }
+    });
+}
+
 - (BOOL)diskImageExistsWithKey:(NSString *)key {
     BOOL exists = NO;
     

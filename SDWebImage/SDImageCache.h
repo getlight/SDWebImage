@@ -30,6 +30,8 @@ typedef void(^SDWebImageCheckCacheCompletionBlock)(BOOL isInCache);
 
 typedef void(^SDWebImageCalculateSizeBlock)(NSUInteger fileCount, NSUInteger totalSize);
 
+typedef void(^SDImageCacheStoreCompletedBlock)(NSString *filePath);
+
 /**
  * SDImageCache maintains a memory cache and an optional disk cache. Disk cache write operations are performed
  * asynchronous so it doesn’t add unnecessary latency to the UI.
@@ -107,6 +109,16 @@ typedef void(^SDWebImageCalculateSizeBlock)(NSUInteger fileCount, NSUInteger tot
  * @param toDisk      Store the image to disk cache if YES
  */
 - (void)storeImage:(UIImage *)image recalculateFromImage:(BOOL)recalculate imageData:(NSData *)imageData forKey:(NSString *)key toDisk:(BOOL)toDisk;
+
+/**
+ * Store an arbitrary piece of NSData to disk at the given key.
+ *
+ * @param data The NSData to store
+ * @param key The unique image cache key
+ * @param fileExtension Optional NSString file extension to append to file before saving
+ * @param doneBlock The optional block to call back into with the file path when storage is complete
+ */
+- (void)storeData:(NSData *)data toDiskWithKey:(NSString *)key fileExtension:(NSString *)fileExtension done:(SDImageCacheStoreCompletedBlock)doneBlock;
 
 /**
  * Query the disk cache asynchronously.
